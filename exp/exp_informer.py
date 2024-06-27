@@ -246,6 +246,9 @@ class Exp_Informer(Exp_Basic):
 
         preds = np.array(preds)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
+
+        # data back to real scale
+        preds = pred_data.inverse_transform(preds)
         
         # result save
         folder_path = './results/' + setting +'/'
