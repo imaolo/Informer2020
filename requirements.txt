@@ -1,5 +1,0 @@
-matplotlib
-numpy < 2.0
-pandas
-scikit_learn
-torch
