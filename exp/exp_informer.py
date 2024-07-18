@@ -90,7 +90,8 @@ class Exp_Informer(Exp_Basic):
             inverse=args.inverse,
             timeenc=timeenc,
             freq=freq,
-            cols=args.cols
+            cols=args.cols,
+            batch_scale=args.batch_scale
         )
         print(flag, len(data_set))
         data_loader = DataLoader(

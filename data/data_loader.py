@@ -188,7 +188,8 @@ class Dataset_ETT_minute(Dataset):
 class Dataset_Custom(Dataset):
     def __init__(self, root_path, flag='train', size=None, 
                  features='S', data_path='ETTh1.csv', 
-                 target='OT', scale=True, inverse=False, timeenc=0, freq='h', cols=None):
+                 target='OT', scale=True, inverse=False, timeenc=0, freq='h', cols=None,
+                 batch_scale=False):
         # size [seq_len, label_len, pred_len]
         # info
         if size == None:
@@ -213,6 +214,7 @@ class Dataset_Custom(Dataset):
         self.cols=cols
         self.root_path = root_path
         self.data_path = data_path
+        self.batch_scale = batch_scale
         self.__read_data__()
 
     def __read_data__(self):
@@ -244,6 +246,7 @@ class Dataset_Custom(Dataset):
         elif self.features=='S':
             df_data = df_raw[[self.target]]
 
+        assert self.scale and self.batch_scale
         if self.scale:
             train_data = df_data[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
@@ -273,6 +276,17 @@ class Dataset_Custom(Dataset):
             seq_y = np.concatenate([self.data_x[r_begin:r_begin+self.label_len], self.data_y[r_begin+self.label_len:r_end]], 0)
         else:
             seq_y = self.data_y[r_begin:r_end]
+        
+        if self.batch_scale:
+            # fit
+            scaler = StandardScaler()
+            combined_data = np.concatenate((seq_x, seq_y), axis=0)
+            scaler.fit(combined_data)
+
+            # scale
+            seq_x = scaler.transform(seq_x)
+            seq_y = scaler.transform(seq_y)
+            
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
@@ -287,7 +301,9 @@ class Dataset_Custom(Dataset):
 class Dataset_Pred(Dataset):
     def __init__(self, root_path, flag='pred', size=None, 
                  features='S', data_path='ETTh1.csv', 
-                 target='OT', scale=True, inverse=False, timeenc=0, freq='15min', cols=None):
+                 target='OT', scale=True, inverse=False, timeenc=0, freq='15min', cols=None,
+                 batch_scale=None):
+        # batch_scale unused - here for compatibility
         # size [seq_len, label_len, pred_len]
         # info
         if size == None:
