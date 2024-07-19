@@ -325,6 +325,7 @@ class Dataset_Pred(Dataset):
         self.cols=cols
         self.root_path = root_path
         self.data_path = data_path
+        self.batch_scale = batch_scale
         self.__read_data__()
 
     def __read_data__(self):
@@ -350,7 +351,7 @@ class Dataset_Pred(Dataset):
         elif self.features=='S':
             df_data = df_raw[[self.target]]
 
-        if self.scale:
+        if self.scale and not self.batch_scale:
             self.scaler.fit(df_data.values)
             data = self.scaler.transform(df_data.values)
         else:
@@ -382,6 +383,17 @@ class Dataset_Pred(Dataset):
             seq_y = self.data_x[r_begin:r_begin+self.label_len]
         else:
             seq_y = self.data_y[r_begin:r_begin+self.label_len]
+
+        if self.batch_scale:
+            # fit
+            scaler = StandardScaler()
+            combined_data = np.concatenate((seq_x, seq_y), axis=0)
+            scaler.fit(combined_data)
+
+            # scale
+            seq_x = scaler.transform(seq_x)
+            seq_y = scaler.transform(seq_y)
+
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
