@@ -356,6 +356,7 @@ class Dataset_Pred(Dataset):
             data = self.scaler.transform(df_data.values)
         else:
             data = df_data.values
+            del self.scaler
             
         tmp_stamp = df_raw[['date']][border1:border2]
         tmp_stamp['date'] = pd.to_datetime(tmp_stamp.date)
@@ -385,14 +386,15 @@ class Dataset_Pred(Dataset):
             seq_y = self.data_y[r_begin:r_begin+self.label_len]
 
         if self.sample_scale:
+            assert not hasattr(self, 'scaler')
             # fit
-            scaler = StandardScaler()
+            self.scaler = StandardScaler()
             combined_data = np.concatenate((seq_x, seq_y), axis=0)
-            scaler.fit(combined_data)
+            self.scaler.fit(combined_data)
 
             # scale
-            seq_x = scaler.transform(seq_x)
-            seq_y = scaler.transform(seq_y)
+            seq_x = self.scaler.transform(seq_x)
+            seq_y = self.scaler.transform(seq_y)
 
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
