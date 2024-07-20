@@ -189,7 +189,7 @@ class Dataset_Custom(Dataset):
     def __init__(self, root_path, flag='train', size=None, 
                  features='S', data_path='ETTh1.csv', 
                  target='OT', scale=True, inverse=False, timeenc=0, freq='h', cols=None,
-                 batch_scale=False):
+                 sample_scale=False):
         # size [seq_len, label_len, pred_len]
         # info
         if size == None:
@@ -214,7 +214,7 @@ class Dataset_Custom(Dataset):
         self.cols=cols
         self.root_path = root_path
         self.data_path = data_path
-        self.batch_scale = batch_scale
+        self.sample_scale = sample_scale
         self.__read_data__()
 
     def __read_data__(self):
@@ -246,7 +246,7 @@ class Dataset_Custom(Dataset):
         elif self.features=='S':
             df_data = df_raw[[self.target]]
 
-        if self.scale and not self.batch_scale:
+        if self.scale and not self.sample_scale:
             train_data = df_data[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(df_data.values)
@@ -276,7 +276,7 @@ class Dataset_Custom(Dataset):
         else:
             seq_y = self.data_y[r_begin:r_end]
         
-        if self.batch_scale:
+        if self.sample_scale:
             # fit
             scaler = StandardScaler()
             combined_data = np.concatenate((seq_x, seq_y), axis=0)
@@ -301,8 +301,8 @@ class Dataset_Pred(Dataset):
     def __init__(self, root_path, flag='pred', size=None, 
                  features='S', data_path='ETTh1.csv', 
                  target='OT', scale=True, inverse=False, timeenc=0, freq='15min', cols=None,
-                 batch_scale=None):
-        # batch_scale unused - here for compatibility
+                 sample_scale=None):
+        # sample_scale unused - here for compatibility
         # size [seq_len, label_len, pred_len]
         # info
         if size == None:
@@ -325,7 +325,7 @@ class Dataset_Pred(Dataset):
         self.cols=cols
         self.root_path = root_path
         self.data_path = data_path
-        self.batch_scale = batch_scale
+        self.sample_scale = sample_scale
         self.__read_data__()
 
     def __read_data__(self):
@@ -351,7 +351,7 @@ class Dataset_Pred(Dataset):
         elif self.features=='S':
             df_data = df_raw[[self.target]]
 
-        if self.scale and not self.batch_scale:
+        if self.scale and not self.sample_scale:
             self.scaler.fit(df_data.values)
             data = self.scaler.transform(df_data.values)
         else:
@@ -384,7 +384,7 @@ class Dataset_Pred(Dataset):
         else:
             seq_y = self.data_y[r_begin:r_begin+self.label_len]
 
-        if self.batch_scale:
+        if self.sample_scale:
             # fit
             scaler = StandardScaler()
             combined_data = np.concatenate((seq_x, seq_y), axis=0)

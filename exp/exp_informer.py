@@ -91,7 +91,7 @@ class Exp_Informer(Exp_Basic):
             timeenc=timeenc,
             freq=freq,
             cols=args.cols,
-            batch_scale=args.batch_scale
+            sample_scale=args.sample_scale
         )
         print(flag, len(data_set))
         data_loader = DataLoader(
