@@ -108,8 +108,11 @@ class Exp_Informer(Exp_Basic):
         return model_optim
     
     def _select_criterion(self):
-        criterion =  nn.MSELoss()
-        return criterion
+        if self.args.loss == 'mse':
+            return nn.MSELoss()
+        elif self.args.loss == 'mae':
+            return nn.L1Loss()
+        raise RuntimeError(f"Loss function {self.args.loss} unsupported")
 
     def vali(self, vali_data, vali_loader, criterion):
         self.model.eval()
