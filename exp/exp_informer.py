@@ -90,8 +90,7 @@ class Exp_Informer(Exp_Basic):
             inverse=args.inverse,
             timeenc=timeenc,
             freq=freq,
-            cols=args.cols,
-            sample_scale=args.sample_scale
+            cols=args.cols
         )
         print(flag, len(data_set))
         data_loader = DataLoader(
@@ -165,7 +164,6 @@ class Exp_Informer(Exp_Basic):
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                     iter_count = 0
                     time_now = time.time()
-                    yield {'curr_epoch': epoch + 1, 'train_loss': float(loss.item()), 'left_time': left_time}
                 
                 if self.args.use_amp:
                     scaler.scale(loss).backward()
@@ -183,7 +181,6 @@ class Exp_Informer(Exp_Basic):
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             early_stopping(vali_loss, self.model, path)
-            yield {'curr_epoch': epoch + 1, 'train_loss': float(train_loss.item()), 'vali_loss': float(vali_loss), 'test_loss': float(test_loss)}
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
@@ -249,9 +246,6 @@ class Exp_Informer(Exp_Basic):
 
         preds = np.array(preds)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
-
-        # data back to real scale
-        preds = pred_data.inverse_transform(preds)
         
         # result save
         folder_path = './results/' + setting +'/'

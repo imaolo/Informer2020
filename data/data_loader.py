@@ -188,8 +188,7 @@ class Dataset_ETT_minute(Dataset):
 class Dataset_Custom(Dataset):
     def __init__(self, root_path, flag='train', size=None, 
                  features='S', data_path='ETTh1.csv', 
-                 target='OT', scale=True, inverse=False, timeenc=0, freq='h', cols=None,
-                 sample_scale=False):
+                 target='OT', scale=True, inverse=False, timeenc=0, freq='h', cols=None):
         # size [seq_len, label_len, pred_len]
         # info
         if size == None:
@@ -214,7 +213,6 @@ class Dataset_Custom(Dataset):
         self.cols=cols
         self.root_path = root_path
         self.data_path = data_path
-        self.sample_scale = sample_scale
         self.__read_data__()
 
     def __read_data__(self):
@@ -246,7 +244,7 @@ class Dataset_Custom(Dataset):
         elif self.features=='S':
             df_data = df_raw[[self.target]]
 
-        if self.scale and not self.sample_scale:
+        if self.scale:
             train_data = df_data[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(df_data.values)
@@ -275,17 +273,6 @@ class Dataset_Custom(Dataset):
             seq_y = np.concatenate([self.data_x[r_begin:r_begin+self.label_len], self.data_y[r_begin+self.label_len:r_end]], 0)
         else:
             seq_y = self.data_y[r_begin:r_end]
-        
-        if self.sample_scale:
-            # fit
-            scaler = StandardScaler()
-            combined_data = np.concatenate((seq_x, seq_y), axis=0)
-            scaler.fit(combined_data)
-
-            # scale
-            seq_x = scaler.transform(seq_x)
-            seq_y = scaler.transform(seq_y)
-            
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
@@ -300,9 +287,7 @@ class Dataset_Custom(Dataset):
 class Dataset_Pred(Dataset):
     def __init__(self, root_path, flag='pred', size=None, 
                  features='S', data_path='ETTh1.csv', 
-                 target='OT', scale=True, inverse=False, timeenc=0, freq='15min', cols=None,
-                 sample_scale=None):
-        # sample_scale unused - here for compatibility
+                 target='OT', scale=True, inverse=False, timeenc=0, freq='15min', cols=None):
         # size [seq_len, label_len, pred_len]
         # info
         if size == None:
@@ -325,7 +310,6 @@ class Dataset_Pred(Dataset):
         self.cols=cols
         self.root_path = root_path
         self.data_path = data_path
-        self.sample_scale = sample_scale
         self.__read_data__()
 
     def __read_data__(self):
@@ -351,12 +335,11 @@ class Dataset_Pred(Dataset):
         elif self.features=='S':
             df_data = df_raw[[self.target]]
 
-        if self.scale and not self.sample_scale:
+        if self.scale:
             self.scaler.fit(df_data.values)
             data = self.scaler.transform(df_data.values)
         else:
             data = df_data.values
-            del self.scaler
             
         tmp_stamp = df_raw[['date']][border1:border2]
         tmp_stamp['date'] = pd.to_datetime(tmp_stamp.date)
@@ -384,18 +367,6 @@ class Dataset_Pred(Dataset):
             seq_y = self.data_x[r_begin:r_begin+self.label_len]
         else:
             seq_y = self.data_y[r_begin:r_begin+self.label_len]
-
-        if self.sample_scale:
-            assert not hasattr(self, 'scaler')
-            # fit
-            self.scaler = StandardScaler()
-            combined_data = np.concatenate((seq_x, seq_y), axis=0)
-            self.scaler.fit(combined_data)
-
-            # scale
-            seq_x = self.scaler.transform(seq_x)
-            seq_y = self.scaler.transform(seq_y)
-
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
